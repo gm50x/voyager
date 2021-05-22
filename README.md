@@ -1,34 +1,123 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Voyager
+
+This repository is a sandbox using NextJS and Material-UI. The central idea is to cover the main points about configuring Material-UI on NextJS for Server Side Usage as well as learn some Layout skills.
 
 ## Getting Started
 
-First, run the development server:
+- App Creation with NextJS:
 
 ```bash
+npx create-next-app <App-Name>
+```
+- Running the App is also very straightforward:
+
+```bash
+# development
 npm run dev
-# or
-yarn dev
+
+# production
+npm run build
+npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Converting everything to Typescript:
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+NextJS works with both .JS and .TS files, in fact you can even use a combination of both. We are converting this project to typescript at the very beginning, but we are not forcing the usage of it on tsconfig.json. The usage of typescript may help in the future, so we are letting everything ready in case we come to need it. A few development dependencies are required to run NextJS with Typescript.
+```bash
+npm i --save-dev typescript @types/react @types/node
+```
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+You can rename all the .js files to .tsx files and run Next now.
+- Installing Material-UI:
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+Material-UI is a rich environmnet of UI components, you can find pretty much any piece of front end component in the library. We are using two libraries from the Material-UI, core and icons:
+```bash
+npm i @material-ui/core @material-ui/icons
+```
 
-## Learn More
+- Configuring Material-UI for NextJS SSR:
 
-To learn more about Next.js, take a look at the following resources:
+If you start using material-ui at this moment without configuring the server side rendering stuff, you'll come accross multiple warnings on the console about class names not matching... This basically happens because material will be generating css classes on the server, but then once the page gets to the user browser, these classes will be generated again... At least, that's how I get what's going on. In order to fix it, there are a few steps you have to do on both de _document.tsx and the _app.tsx:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+First we need to create a _document.tsx on the pages directory with the following code inside:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+```javascript
+// pages/_document.tsx
 
-## Deploy on Vercel
+import React from 'react'
+import { ServerStyleSheets } from '@material-ui/styles'
+import Document, { Html, Head, Main, NextScript } from 'next/document'
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+export default class VoyagerDocument extends Document {
+  static async getInitialProps(context) {
+    const styleSheets = new ServerStyleSheets()
+    const originalRenderPage = context.renderPage
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+    context.renderPage = () =>
+      originalRenderPage({
+        enhanceApp: (App) => (props) => styleSheets.collect(<App {...props} />)
+      })
+
+    const initialProps = await Document.getInitialProps(context)
+
+    return {
+      ...initialProps,
+      styles: [
+        ...React.Children.toArray(initialProps.styles),
+        styleSheets.getStyleElement()
+      ]
+    }
+  }
+
+  render() {
+    return (
+      <Html>
+        <Head>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+          />
+        </Head>
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </Html>
+    )
+  }
+}
+```
+
+Once you have done that, we need to alter _app.tsx to remove some server side jss too. You can also take this oportunity to create a theme with createMuiTheme() from @material/core and add the ThemeProvider to the app so the 'global' theme is applied globally on your app.
+
+```javascript
+import { useEffect } from 'react'
+import { ThemeProvider, CssBaseline } from '@material-ui/core'
+import Head from 'next/head'
+
+const CustomApp = ({ Component, pageProps }) => {
+  useEffect(() => {
+    const jssStyles = document.querySelector('#jss-server-side')
+    if (jssStyles) {
+      jssStyles.parentElement.removeChild(jssStyles)
+    }
+  })
+  return (
+    <>
+      <Head>
+        <title>--YOUR-APP-TITLE--</title>
+        <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
+      </Head>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+          <Component {...pageProps} />
+      </ThemeProvider>
+    </>
+
+  )
+}
+
+export default CustomApp
+```
+
+You are now good to go with the material library working on NextJS Server Side Rendering
