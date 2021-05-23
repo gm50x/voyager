@@ -1,35 +1,38 @@
+import { useState } from 'react'
 import Image from 'next/image'
 import NextLink from 'next/link'
-import { AppBar, Toolbar, Typography, SvgIcon, makeStyles } from '@material-ui/core'
+import { AppBar, Toolbar, Button, makeStyles, Hidden, IconButton } from '@material-ui/core'
+import MenuIcon from '@material-ui/icons/Menu'
+
+import { NavMenu } from '@@components'
 
 const useStyles = makeStyles(theme => ({
   root: {
     flexGrow: 1
   },
-  title: {
-    marginLeft: theme.spacing(2),
-    flexGrow: 1
-  },
   logo: {
-    '& svg path': {
-      fill: 'red'
-    }
+    cursor: 'pointer'
   }
 }))
 export const HeaderBar = () => {
   const classes = useStyles()
+  const [isMenuOpen, setMenuOpen] = useState(false)
+
+  const toggleMenu = () => setMenuOpen(!isMenuOpen)
 
   return (
     <AppBar position="static" className={classes.root}>
       <Toolbar>
-        <object type="image/svg+xml" data="/voyager.svg" className={classes.logo}>
-          <Image src="/vercel.svg" width={100} height={64} />
-        </object>
+        <Hidden mdUp>
+          <IconButton onClick={toggleMenu} color="inherit">
+            <MenuIcon />
+          </IconButton>
+        </Hidden>
         <NextLink href="/">
-          <Image src="/voyager.svg" width={100} height={64} />
+          <Image src="/voyager.svg" width={100} height={64} className={classes.logo} />
         </NextLink>
-        <Typography className={classes.title}>Voyager</Typography>
-        <Typography>Hey Ho!</Typography>
+        <NavMenu isOpen={isMenuOpen} onClose={toggleMenu} />
+        <Button variant="text" color="inherit">Login</Button>
       </Toolbar>
     </AppBar>
   )
