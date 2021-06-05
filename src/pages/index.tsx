@@ -2,7 +2,7 @@ import Head from 'next/head'
 import Image from 'next/image'
 
 import { Container, Box, makeStyles } from '@material-ui/core'
-import { HomeClickableCard } from '@@components'
+import { HomeClickableCard, ThemedButton, ThemeContext } from '@@components'
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -83,6 +83,8 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
+
+
 export const Home = () => {
   const classes = useStyles()
   return (
@@ -97,6 +99,8 @@ export const Home = () => {
         <h1 className={classes.title}>
           Welcome to <a href="https://nextjs.org">Next.js!</a>
         </h1>
+
+        <ThemedButton />
 
         <p className={classes.description}>
           Get started by editing{' '}
